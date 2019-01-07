@@ -10,9 +10,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Chapter06 demo',
       home: Scaffold(
-        appBar: AppBar(
-          title: Text('Row '),
-        ),
         body: ScrollControllerTestRoute(),
       ),
     );
@@ -28,13 +25,66 @@ class ScrollControllerTestRoute extends StatefulWidget {
 }
 
 class ScrollControllerTestRouteState extends State<ScrollControllerTestRoute> {
+  ScrollController _controller = new ScrollController();
+  bool showToTopBtn = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //监听滚动事件，打印滚动位置
+    _controller.addListener(() {
+      print(_controller.offset);
+      if (_controller.offset < 1000 && showToTopBtn) {
+        setState(() {
+          showToTopBtn = false;
+        });
+      } else if (_controller.offset >= 1000 && showToTopBtn == false) {
+        setState(() {
+          showToTopBtn = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _controller.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return null;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("滚动控制"),
+      ),
+      body: Scrollbar(
+        child: ListView.builder(
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text("$index"),
+            );
+          },
+          itemCount: 100,
+          itemExtent: 50,
+          controller: _controller,
+        ),
+      ),
+      floatingActionButton: !showToTopBtn
+          ? null
+          : FloatingActionButton(
+              child: Icon(Icons.arrow_upward),
+              onPressed: () {
+                _controller.animateTo(.0,
+                    duration: Duration(microseconds: 20), curve: Curves.ease);
+              },
+            ),
+    );
   }
 }
-
 
 //粘性滚动
 class CustomScrollViewTestRoute extends StatelessWidget {
@@ -77,16 +127,17 @@ class CustomScrollViewTestRoute extends StatelessWidget {
                   childAspectRatio: 4,
                 )),
           ),
-          new SliverFixedExtentList(delegate: new SliverChildBuilderDelegate((BuildContext context,int index){
-            //创建列表项
-            return new Container(
-              alignment: Alignment.center,
-              color: Colors.lightBlue[100*(index%9)],
-              child: new Text('list item $index'),
-            );
-          },
-          childCount: 50
-          ), itemExtent: 50)
+          new SliverFixedExtentList(
+              delegate: new SliverChildBuilderDelegate(
+                  (BuildContext context, int index) {
+                //创建列表项
+                return new Container(
+                  alignment: Alignment.center,
+                  color: Colors.lightBlue[100 * (index % 9)],
+                  child: new Text('list item $index'),
+                );
+              }, childCount: 50),
+              itemExtent: 50)
         ],
       ),
     );
